@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aktiesignaler</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0b0f19;
+  color: #f4f6fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 20px 16px 40px;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.logo {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+}
+
+.logo span {
+  color: #50e3a4;
+}
+
+.status {
+  font-size: 11px;
+  color: #8b95a9;
+  background: #171e2d;
+  padding: 8px 11px;
+  border-radius: 20px;
+}
+
+h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8995aa;
+  margin-bottom: 12px;
+}
+
+.card {
+  background: #141a27;
+  border: 1px solid #202a3b;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 15px;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+input {
+  min-width: 0;
+  flex: 1;
+  background: #141a27;
+  color: white;
+  border: 1px solid #263248;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  outline: none;
+}
+
+button {
+  background: #50e3a4;
+  color: #07140d;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:active {
+  opacity: 0.8;
+}
+
+.stock-name {
+  color: #8d99ad;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.price {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.change {
+  color: #50e3a4;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.chart-wrap {
+  height: 230px;
+  margin-top: 22px;
+}
+
+.periods {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.periods button {
+  background: #20293a;
+  color: #9da9bb;
+  flex: 1;
+  padding: 10px 5px;
+  font-size: 12px;
+}
+
+.periods button.active {
+  background: #50e3a4;
+  color: #07140d;
+}
+
+.signal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.signal-label {
+  color: #8995aa;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.signal-value {
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.signal-desc {
+  font-size: 12px;
+  color: #8995aa;
+  margin-top: 7px;
+  line-height: 1.5;
+}
+
+.signal-icon {
+  font-size: 27px;
+  background: #1b3c32;
+  border-radius: 14px;
+  padding: 15px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-label {
+  color: #8995aa;
+  font-size: 12px;
+  margin-bottom: 9px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-sub {
+  color: #8995aa;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 750;
+  margin: 26px 0 14px;
+}
+
+.indicator {
+  margin-bottom: 18px;
+}
+
+.indicator:last-child {
+  margin-bottom: 0;
+}
+
+.indicator-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 9px;
+}
+
+.indicator-head span:last-child {
+  font-weight: 700;
+}
+
+.bar {
+  background: #273144;
+  height: 7px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #50e3a4;
+  border-radius: 10px;
+}
+
+.note {
+  font-size: 11px;
+  color: #748096;
+  line-height: 1.6;
+  margin-top: 18px;
+}
+
+footer {
+  text-align: center;
+  font-size: 11px;
+  color: #657187;
+  margin-top: 26px;
+  line-height: 1.6;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <div class="logo">AKTIE<span>SIGNALER</span></div>
+  <div class="status">● ANALYS</div>
+</header>
+
+<div class="search">
+  <input id="ticker" placeholder="Sök aktie, t.ex. NVDA" value="NVDA">
+  <button onclick="searchStock()">Sök</button>
+</div>
+
+<div class="card">
+  <div class="stock-name" id="stockName">NVIDIA Corporation · NVDA</div>
+  <div class="price" id="price">$142.85</div>
+  <div class="change" id="change">+2.45% idag</div>
+
+  <div class="chart-wrap">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="periods">
+    <button class="active" onclick="setPeriod(30,this)">1M</button>
+    <button onclick="setPeriod(90,this)">3M</button>
+    <button onclick="setPeriod(180,this)">6M</button>
+    <button onclick="setPeriod(365,this)">1Y</button>
+  </div>
+</div>
+
+<div class="section-title">Analys</div>
+
+<div class="card signal">
+  <div>
+    <div class="signal-label">TEKNISK SIGNAL</div>
+    <div class="signal-value" id="signal">AVVAKTA</div>
+    <div class="signal-desc" id="signalDesc">
+      Analyserar trend och momentum.
+    </div>
+  </div>
+  <div class="signal-icon" id="signalIcon">⌁</div>
+</div>
+
+<div class="stats">
+  <div class="card">
+    <div class="stat-label">RSI (14)</div>
+    <div class="stat-value" id="rsi">52.4</div>
+    <div class="stat-sub" id="rsiDesc">Neutralt momentum</div>
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Trend</div>
+    <div class="stat-value" id="trend">Positiv</div>
+    <div class="stat-sub">Baserat på MA20 / MA50</div>
+  </div>
+
+  <div class="card">
+    <div class="stat-label">MA20</div>
+    <div class="stat-value" id="ma20">$140.20</div>
+    <div class="stat-sub">20 dagars medelvärde</div>
+  </div>
+
+  <div class="card">
+    <div class="stat-label">MA50</div>
+    <div class="stat-value" id="ma50">$137.60</div>
+    <div class="stat-sub">50 dagars medelvärde</div>
+  </div>
+</div>
+
+<div class="section-title">Indikatorer</div>
+
+<div class="card">
+  <div class="indicator">
+    <div class="indicator-head">
+      <span>Trendstyrka</span>
+      <span id="trendStrength">68%</span>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" id="trendBar" style="width:68%"></div>
+    </div>
+  </div>
+
+  <div class="indicator">
+    <div class="indicator-head">
+      <span>Momentum</span>
+      <span id="momentum">Positivt</span>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" id="momentumBar" style="width:65%"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    Signalen baseras på tekniska indikatorer.
+    Den garanterar inte framtida kursutveckling.
+  </div>
+</div>
+
+<footer>
+  AKTIESIGNALER · ANALYSVERKTYG<br>
+  Demo med exempeldata. Inte investeringsrådgivning.
+</footer>
+
+</div>
+
+<script>
+let chart;
+let currentPeriod = 30;
+
+// Exempeldata. Inte riktiga aktiekurser.
+let basePrice = 142.85;
+
+function generateData(days) {
+  let data = [];
+  let price = basePrice * 0.88;
+
+  for (let i = 0; i < days; i++) {
+    price += (Math.random() - 0.46) * 3;
+    data.push(Number(price.toFixed(2)));
+  }
+
+  data[data.length - 1] = basePrice;
+  return data;
+}
+
+function movingAverage(data, period) {
+  let result = [];
+
+  for (let i = 0; i < data.length; i++) {
+    let start = Math.max(0, i - period + 1);
+    let values = data.slice(start, i + 1);
+    let average = values.reduce((a,b) => a+b, 0) / values.length;
+    result.push(Number(average.toFixed(2)));
+  }
+
+  return result;
+}
+
+function calculateRSI(data) {
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = data.length - 14; i < data.length; i++) {
+    let difference = data[i] - data[i - 1];
+
+    if (difference > 0) gains += difference;
+    else losses += Math.abs(difference);
+  }
+
+  if (losses === 0) return 100;
+
+  let rs = gains / losses;
+  return 100 - (100 / (1 + rs));
+}
+
+function drawChart(days) {
+  let data = generateData(days);
+  let ma20 = movingAverage(data, 20);
+  let ma50 = movingAverage(data, 50);
+
+  let labels = data.map((_,i) => i + 1);
+
+  let ctx = document.getElementById("chart");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Aktiekurs",
+          data: data,
+          borderColor: "#50e3a4",
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: true,
+          backgroundColor: "rgba(80,227,164,0.07)",
+          tension: 0.35
+        },
+        {
+          label: "MA20",
+          data: ma20,
+          borderColor: "#7798ff",
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.2
+        },
+        {
+          label: "MA50",
+          data: ma50,
+          borderColor: "#f0b45b",
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: "index"
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: "#8995aa",
+            boxWidth: 12,
+            font: { size: 10 }
+          }
+        }
+      },
+      scales: {
+        x: {
+          display: false,
+          grid: { display: false }
+        },
+        y: {
+          position: "right",
+          grid: { color: "#202a3b" },
+          ticks: {
+            color: "#8995aa",
+            font: { size: 10 }
+          }
+        }
+      }
+    }
+  });
+
+  updateAnalysis(data, ma20, ma50);
+}
+
+function updateAnalysis(data, ma20, ma50) {
+  let price = data[data.length - 1];
+  let rsi = calculateRSI(data);
+
+  let trend = ma20[ma20.length - 1] > ma50[ma50.length - 1];
+  let momentum = price > ma20[ma20.length - 1];
+
+  let signal = "AVVAKTA";
+  let description = "Ingen tydlig riktning just nu.";
+  let icon = "⌁";
+
+  if (trend && momentum && rsi < 70) {
+    signal = "MÖJLIG KÖPSIGNAL";
+    description = "Positiv trend och momentum. RSI är under 70.";
+    icon = "↗";
+  }
+
+  if (!trend && !momentum && rsi > 30) {
+    signal = "MÖJLIG SÄLJSIGNAL";
+    description = "Negativ trend och svagt momentum.";
+    icon = "↘";
+  }
+
+  document.getElementById("price").innerText =
+    "$" + price.toFixed(2);
+
+  document.getElementById("signal").innerText = signal;
+  document.getElementById("signalDesc").innerText = description;
+  document.getElementById("signalIcon").innerText = icon;
+
+  document.getElementById("rsi").innerText = rsi.toFixed(1);
+  document.getElementById("rsiDesc").innerText =
+    rsi > 70 ? "Överköpt område" :
+    rsi < 30 ? "Översålt område" : "Neutralt momentum";
+
+  document.getElementById("trend").innerText =
+    trend ? "Positiv" : "Negativ";
+
+  document.getElementById("ma20").innerText =
+    "$" + ma20[ma20.length - 1].toFixed(2);
+
+  document.getElementById("ma50").innerText =
+    "$" + ma50[ma50.length - 1].toFixed(2);
+
+  document.getElementById("trendStrength").innerText =
+    (trend ? 68 : 32) + "%";
+
+  document.getElementById("trendBar").style.width =
+    (trend ? 68 : 32) + "%";
+
+  document.getElementById("momentum").innerText =
+    momentum ? "Positivt" : "Negativt";
+
+  document.getElementById("momentumBar").style.width =
+    (momentum ? 65 : 35) + "%";
+
+  document.getElementById("change").innerText =
+    "+2.45% idag (exempeldata)";
+}
+
+function setPeriod(days, button) {
+  currentPeriod = days;
+
+  document.querySelectorAll(".periods button")
+    .forEach(btn => btn.classList.remove("active"));
+
+  button.classList.add("active");
+
+  drawChart(days);
+}
+
+function searchStock() {
+  let ticker = document.getElementById("ticker")
+    .value.trim().toUpperCase();
+
+  if (!ticker) return;
+
+  document.getElementById("stockName").innerText =
+    ticker + " · Exempeldata";
+
+  // Demo: olika sökningar visar exempeldata.
+  basePrice = 80 + Math.random() * 250;
+
+  drawChart(currentPeriod);
+}
+
+// Starta appen
+drawChart(currentPeriod);
+</script>
+</body>
+</html>
